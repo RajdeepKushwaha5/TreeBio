@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
-  output: 'standalone',
+  // Remove 'standalone' output for Vercel deployment
 };
 
 export default nextConfig;
