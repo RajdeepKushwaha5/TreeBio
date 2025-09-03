@@ -6,6 +6,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import { RealtimeProvider } from "@/components/realtime-provider-fallback";
 import { Toaster } from "sonner";
+import { ErrorBoundary } from "react-error-boundary";
 
 const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -64,7 +65,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    >
       <html lang="en" suppressHydrationWarning>
         <body className={`${poppins.variable} antialiased`}>
           <ThemeProvider
@@ -73,7 +76,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <ErrorBoundary>
+            <ErrorBoundary
+              fallback={<ErrorFallback />}
+              onError={(error) => console.error('Application error:', error)}
+            >
               <RealtimeProvider>
                 <Toaster />
                 {children}
@@ -86,27 +92,22 @@ export default function RootLayout({
   );
 }
 
-// Add Error Boundary Component
-function ErrorBoundary({ children }: { children: React.ReactNode }) {
-  try {
-    return <>{children}</>;
-  } catch (error) {
-    console.error('Layout error:', error);
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
-          <p className="text-muted-foreground mb-6">
-            Please refresh the page or try again later.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Refresh Page
-          </button>
-        </div>
+// Error Fallback Component
+function ErrorFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+      <div className="text-center max-w-md mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
+        <p className="text-muted-foreground mb-6">
+          We&apos;re experiencing technical difficulties. Please try refreshing the page.
+        </p>
+        <button
+          onClick={() => window.location.reload()}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+        >
+          Refresh Page
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
 }

@@ -38,25 +38,41 @@ export const claimUsername = async (username: string) => {
 
 }
 
-export const getCurrentUsername = async ()=>{
-  const user = await currentUser();
+export const getCurrentUsername = async () => {
+  try {
+    const user = await currentUser();
 
+    if (!user) {
+      return null;
+    }
 
+    const currentUsername = await db.user.findUnique({
+      where: {
+        clerkId: user.id
+      },
+      select: {
+        username: true,
+        bio: true,
+        socialLinks: true
+      },
+    });
 
-const currentUsername = await db.user.findUnique({
-  where:{
-    clerkId:user?.id
-  },
-  select:{
-    username:true,
-    bio:true,
-    socialLinks:true
-  },
- 
-})
-
-return currentUsername;
-}
+    return currentUsername;
+  } catch (error) {
+    console.error("❌ Error fetching user profile:", error);
+    
+    // Return mock data to prevent blocking the UI
+    const user = await currentUser();
+    if (user) {
+      return {
+        username: null,
+        bio: null,
+        socialLinks: []
+      };
+    }
+    return null;
+  }
+};
 
 
 export const createUserProfile = async (data:ProfileFormData)=>{
