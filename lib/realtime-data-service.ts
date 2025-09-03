@@ -1,40 +1,12 @@
 // Real-time data service for TreeBio
 import { toast } from 'sonner';
-
-export interface UserProfile {
-  id?: string;
-  name: string;
-  bio: string;
-  avatar: string;
-  username?: string;
-  title?: string;
-  location?: string;
-  website?: string;
-}
-
-export interface Link {
-  id?: string;
-  title: string;
-  url: string;
-  description?: string;
-  isVisible: boolean;
-  sortOrder?: number;
-}
-
-export interface SocialLink {
-  id?: string;
-  platform: string;
-  url: string;
-  username?: string;
-  isVisible: boolean;
-  sortOrder?: number;
-}
+import { User, Link, SocialLink } from '@/types';
 
 class RealtimeDataService {
   private baseUrl = '/api';
 
   // Profile operations
-  async updateProfile(profile: UserProfile) {
+  async updateProfile(profile: Partial<User>) {
     try {
       const response = await fetch(`${this.baseUrl}/profile`, {
         method: 'PUT',
@@ -74,7 +46,7 @@ class RealtimeDataService {
   }
 
   // Link operations
-  async addLink(link: Link) {
+  async addLink(link: Omit<Link, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
       const response = await fetch(`${this.baseUrl}/links`, {
         method: 'POST',
@@ -143,7 +115,7 @@ class RealtimeDataService {
   }
 
   // Social link operations
-  async addSocialLink(socialLink: SocialLink) {
+  async addSocialLink(socialLink: Omit<SocialLink, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
       const response = await fetch(`${this.baseUrl}/social-links`, {
         method: 'POST',

@@ -3,6 +3,46 @@ import { auth } from '@clerk/nextjs/server';
 import { db } from '@/lib/db';
 import { triggerRealtimeEvent, PUSHER_EVENTS, PUSHER_CHANNELS } from '@/lib/pusher';
 
+export async function GET(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const user = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: {
+        links: {
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      links: user.links || [],
+    });
+  } catch (error) {
+    console.error('Error fetching links:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch links' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();

@@ -1,46 +1,56 @@
-"use client";
-
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Home, ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/20">
-      <div className="max-w-md mx-auto text-center p-8">
-        <div className="mb-8">
-          <div className="text-9xl font-bold text-muted-foreground/30 mb-4">404</div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Page Not Found</h1>
-          <p className="text-muted-foreground mb-8">
-            Sorry, we couldn&apos;t find the page you&apos;re looking for. It might have been moved, deleted, or the URL might be incorrect.
+    <html>
+      <head>
+        <title>404 - Page Not Found</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: 'system-ui, sans-serif',
+        backgroundColor: '#f9fafb',
+        margin: 0
+      }}>
+        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
+          <h1 style={{ fontSize: '4rem', margin: '0 0 1rem 0', color: '#374151' }}>404</h1>
+          <h2 style={{ fontSize: '1.5rem', margin: '0 0 1rem 0', color: '#1f2937' }}>Page Not Found</h2>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            The page you&apos;re looking for doesn&apos;t exist.
           </p>
-        </div>
-
-        <div className="space-y-4">
-          <Link href="/">
-            <Button className="w-full" size="lg">
-              <Home className="mr-2 h-4 w-4" />
-              Go Home
-            </Button>
-          </Link>
-          
-          <Button
-            variant="outline"
-            size="lg"
-            className="w-full"
-            onClick={() => window.history.back()}
+          <Link 
+            href="/"
+            style={{
+              display: 'inline-block',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '0.5rem',
+              marginRight: '1rem'
+            }}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Go Back
-          </Button>
+            Go Home
+          </Link>
+          <Link 
+            href="/admin"
+            style={{
+              display: 'inline-block',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#e5e7eb',
+              color: '#374151',
+              textDecoration: 'none',
+              borderRadius: '0.5rem'
+            }}
+          >
+            Dashboard
+          </Link>
         </div>
-        
-        <div className="mt-8 pt-8 border-t border-border/50">
-          <p className="text-sm text-muted-foreground">
-            Need help? <Link href="/admin" className="text-primary hover:underline">Visit your dashboard</Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      </body>
+    </html>
   );
 }

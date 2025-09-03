@@ -5,33 +5,19 @@ import { useUser } from '@clerk/nextjs';
 import { pusherClient, PUSHER_EVENTS, PUSHER_CHANNELS } from '@/lib/pusher';
 import { dataService } from '@/lib/realtime-data-service';
 import { toast } from 'sonner';
-
-interface RealtimeContextType {
-  isConnected: boolean;
-  profileData: any;
-  links: any[];
-  socialLinks: any[];
-  refreshData: () => Promise<void>;
-  updateProfile: (profile: any) => Promise<void>;
-  addLink: (link: any) => Promise<void>;
-  updateLink: (link: any) => Promise<void>;
-  deleteLink: (linkId: string) => Promise<void>;
-  addSocialLink: (socialLink: any) => Promise<void>;
-  updateSocialLink: (socialLink: any) => Promise<void>;
-  deleteSocialLink: (socialLinkId: string) => Promise<void>;
-}
+import { RealtimeContextType, User, Link, SocialLink, PusherEventData } from '@/types';
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
 
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const [isConnected, setIsConnected] = useState(false);
-  const [profileData, setProfileData] = useState<any>(null);
-  const [links, setLinks] = useState<any[]>([]);
-  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<User | null>(null);
+  const [links, setLinks] = useState<Link[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || !pusherClient) return;
 
     // Subscribe to user-specific updates
     const userChannel = pusherClient.subscribe(PUSHER_CHANNELS.USER_CHANNEL(user.id));
@@ -48,59 +34,75 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Profile updates
-    userChannel.bind(PUSHER_EVENTS.PROFILE_UPDATED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.PROFILE_UPDATED, (data: PusherEventData) => {
       console.log('Profile updated:', data);
-      setProfileData(data.profile);
-      toast.success('Profile updated in real-time!');
+      if (data.profile) {
+        setProfileData(data.profile);
+        toast.success('Profile updated in real-time!');
+      }
     });
 
     // Link updates
-    userChannel.bind(PUSHER_EVENTS.LINK_ADDED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.LINK_ADDED, (data: PusherEventData) => {
       console.log('Link added:', data);
-      setLinks(prev => [...prev, data.link]);
-      toast.success('New link added!');
+      if (data.link) {
+        setLinks(prev => [...prev, data.link!]);
+        toast.success('New link added!');
+      }
     });
 
-    userChannel.bind(PUSHER_EVENTS.LINK_UPDATED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.LINK_UPDATED, (data: PusherEventData) => {
       console.log('Link updated:', data);
-      setLinks(prev => prev.map(link => 
-        link.id === data.link.id ? data.link : link
-      ));
-      toast.success('Link updated!');
+      if (data.link) {
+        setLinks(prev => prev.map(link => 
+          link.id === data.link!.id ? data.link! : link
+        ));
+        toast.success('Link updated!');
+      }
     });
 
-    userChannel.bind(PUSHER_EVENTS.LINK_DELETED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.LINK_DELETED, (data: PusherEventData) => {
       console.log('Link deleted:', data);
-      setLinks(prev => prev.filter(link => link.id !== data.linkId));
-      toast.success('Link removed!');
+      if (data.linkId) {
+        setLinks(prev => prev.filter(link => link.id !== data.linkId));
+        toast.success('Link removed!');
+      }
     });
 
     // Social link updates
-    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_ADDED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_ADDED, (data: PusherEventData) => {
       console.log('Social link added:', data);
-      setSocialLinks(prev => [...prev, data.socialLink]);
-      toast.success('Social link added!');
+      if (data.socialLink) {
+        setSocialLinks(prev => [...prev, data.socialLink!]);
+        toast.success('Social link added!');
+      }
     });
 
-    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_UPDATED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_UPDATED, (data: PusherEventData) => {
       console.log('Social link updated:', data);
-      setSocialLinks(prev => prev.map(link => 
-        link.id === data.socialLink.id ? data.socialLink : link
-      ));
-      toast.success('Social link updated!');
+      if (data.socialLink) {
+        setSocialLinks(prev => prev.map(link => 
+          link.id === data.socialLink!.id ? data.socialLink! : link
+        ));
+        toast.success('Social link updated!');
+      }
     });
 
-    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_DELETED, (data: any) => {
+    userChannel.bind(PUSHER_EVENTS.SOCIAL_LINK_DELETED, (data: PusherEventData) => {
       console.log('Social link deleted:', data);
-      setSocialLinks(prev => prev.filter(link => link.id !== data.socialLinkId));
-      toast.success('Social link removed!');
+      if (data.socialLinkId) {
+        setSocialLinks(prev => prev.filter(link => link.id !== data.socialLinkId));
+        toast.success('Social link removed!');
+      }
     });
 
     // Initial data fetch
     refreshData();
 
     return () => {
-      pusherClient.unsubscribe(PUSHER_CHANNELS.USER_CHANNEL(user.id));
+      if (pusherClient && user?.id) {
+        pusherClient.unsubscribe(PUSHER_CHANNELS.USER_CHANNEL(user.id));
+      }
     };
   }, [user?.id]);
 
@@ -117,7 +119,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateProfile = async (profile: any) => {
+  const updateProfile = async (profile: Partial<User>) => {
     try {
       await dataService.updateProfile(profile);
       // Real-time update will be handled by Pusher event
@@ -126,7 +128,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addLink = async (link: any) => {
+  const addLink = async (link: Omit<Link, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       await dataService.addLink(link);
       // Real-time update will be handled by Pusher event
@@ -135,7 +137,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateLink = async (link: any) => {
+  const updateLink = async (link: Link) => {
     try {
       await dataService.updateLink(link);
       // Real-time update will be handled by Pusher event
@@ -153,7 +155,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addSocialLink = async (socialLink: any) => {
+  const addSocialLink = async (socialLink: Omit<SocialLink, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       await dataService.addSocialLink(socialLink);
       // Real-time update will be handled by Pusher event
@@ -162,7 +164,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateSocialLink = async (socialLink: any) => {
+  const updateSocialLink = async (socialLink: SocialLink) => {
     try {
       await dataService.updateSocialLink(socialLink);
       // Real-time update will be handled by Pusher event

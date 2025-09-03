@@ -178,9 +178,9 @@ export const getDashboardData = async (): Promise<{ success: boolean; data?: Das
       stats,
       recentLinks,
       userInfo: {
-        firstName: dbUser.firstName,
-        lastName: dbUser.lastName,
-        username: dbUser.username,
+        firstName: dbUser.firstName || null,
+        lastName: dbUser.lastName || null,
+        username: dbUser.username || null,
       },
     };
 

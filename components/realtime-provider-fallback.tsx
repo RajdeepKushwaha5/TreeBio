@@ -3,33 +3,51 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
-
-interface RealtimeContextType {
-  isConnected: boolean;
-  profileData: any;
-  links: any[];
-  socialLinks: any[];
-  refreshData: () => Promise<void>;
-  updateProfile: (profile: any) => Promise<void>;
-  addLink: (link: any) => Promise<void>;
-  updateLink: (link: any) => Promise<void>;
-  deleteLink: (linkId: string) => Promise<void>;
-  addSocialLink: (socialLink: any) => Promise<void>;
-  updateSocialLink: (socialLink: any) => Promise<void>;
-  deleteSocialLink: (socialLinkId: string) => Promise<void>;
-}
+import { RealtimeContextType, User, Link, SocialLink } from '@/types';
 
 const RealtimeContext = createContext<RealtimeContextType | undefined>(undefined);
 
 export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser();
   const [isConnected, setIsConnected] = useState(true); // Always connected in fallback mode
-  const [profileData, setProfileData] = useState<any>(null);
-  const [links, setLinks] = useState<any[]>([]);
-  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [profileData, setProfileData] = useState<User | null>(null);
+  const [links, setLinks] = useState<Link[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
+
+  const refreshData = useCallback(async () => {
+    try {
+      // For now, just set some default data
+      // In a real implementation, this would fetch from API
+      if (user) {
+        setProfileData({
+          id: 'mock-id',
+          clerkId: user.id,
+          email: user.primaryEmailAddress?.emailAddress || '',
+          firstName: user.firstName || undefined,
+          lastName: user.lastName || undefined,
+          imageUrl: user.imageUrl || undefined,
+          username: user.username || undefined,
+          bio: 'Your bio description goes here...',
+          isPublic: true,
+          isVerified: false,
+          lastActive: new Date(),
+          profileViewCount: 0,
+          linkClicks: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+      }
+      
+      // Set some default links and social links
+      setLinks([]);
+      setSocialLinks([]);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -42,31 +60,12 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
     // Initial data fetch
     refreshData();
-  }, [user?.id]);
+  }, [user?.id, refreshData]);
 
-  const refreshData = async () => {
-    try {
-      // For now, just set some default data
-      // In a real implementation, this would fetch from API
-      setProfileData({
-        name: user?.firstName + ' ' + user?.lastName || 'Your Name',
-        bio: 'Your bio description goes here...',
-        avatar: user?.imageUrl || '',
-        username: user?.username || 'your-username',
-      });
-      
-      // Set some default links and social links
-      setLinks([]);
-      setSocialLinks([]);
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-  };
-
-  const updateProfile = async (profile: any) => {
+  const updateProfile = async (profile: Partial<User>) => {
     try {
       // Update local state immediately for optimistic UI
-      setProfileData(profile);
+      setProfileData(prev => prev ? { ...prev, ...profile } : null);
       toast.success('Profile updated!');
       
       // In a real implementation, this would make API call
@@ -77,12 +76,13 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addLink = async (link: any) => {
+  const addLink = async (link: Omit<Link, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newLink = { 
+      const newLink: Link = { 
         ...link, 
         id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toISOString()
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
       setLinks(prev => [...prev, newLink]);
@@ -94,7 +94,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateLink = async (link: any) => {
+  const updateLink = async (link: Link) => {
     try {
       setLinks(prev => prev.map(l => l.id === link.id ? link : l));
       toast.success('Link updated!');
@@ -116,12 +116,13 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addSocialLink = async (socialLink: any) => {
+  const addSocialLink = async (socialLink: Omit<SocialLink, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newSocialLink = { 
+      const newSocialLink: SocialLink = { 
         ...socialLink, 
         id: Math.random().toString(36).substr(2, 9),
-        createdAt: new Date().toISOString()
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
       setSocialLinks(prev => [...prev, newSocialLink]);
@@ -133,7 +134,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateSocialLink = async (socialLink: any) => {
+  const updateSocialLink = async (socialLink: SocialLink) => {
     try {
       setSocialLinks(prev => prev.map(l => l.id === socialLink.id ? socialLink : l));
       toast.success('Social link updated!');

@@ -1,23 +1,30 @@
 import Pusher from 'pusher';
 import PusherClient from 'pusher-js';
 
+// Check if Pusher env vars are available
+const isPusherConfigured = 
+  process.env.PUSHER_APP_ID && 
+  process.env.NEXT_PUBLIC_PUSHER_KEY && 
+  process.env.PUSHER_SECRET && 
+  process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+
 // Server-side Pusher instance
-export const pusherServer = new Pusher({
+export const pusherServer = isPusherConfigured ? new Pusher({
   appId: process.env.PUSHER_APP_ID!,
   key: process.env.NEXT_PUBLIC_PUSHER_KEY!,
   secret: process.env.PUSHER_SECRET!,
   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
   useTLS: true,
-});
+}) : null;
 
 // Client-side Pusher instance
-export const pusherClient = new PusherClient(
+export const pusherClient = isPusherConfigured && typeof window !== 'undefined' ? new PusherClient(
   process.env.NEXT_PUBLIC_PUSHER_KEY!,
   {
     cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
     forceTLS: true,
   }
-);
+) : null;
 
 // Real-time event types
 export const PUSHER_EVENTS = {
@@ -42,9 +49,13 @@ export const PUSHER_CHANNELS = {
 export const triggerRealtimeEvent = async (
   channel: string,
   event: string,
-  data: any
+  data: Record<string, unknown>
 ) => {
   try {
+    if (!pusherServer) {
+      console.warn('Pusher not configured - real-time event not sent');
+      return;
+    }
     await pusherServer.trigger(channel, event, data);
   } catch (error) {
     console.error('Failed to trigger real-time event:', error);

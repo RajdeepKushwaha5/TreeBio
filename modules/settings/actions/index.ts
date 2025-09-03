@@ -75,12 +75,12 @@ export const getUserSettings = async (): Promise<{ success: boolean; data?: Sett
 
     const settingsData: SettingsData = {
       profile: {
-        firstName: dbUser.firstName,
-        lastName: dbUser.lastName,
-        username: dbUser.username,
-        email: dbUser.email,
-        bio: dbUser.bio,
-        imageUrl: dbUser.imageUrl,
+        firstName: dbUser.firstName || null,
+        lastName: dbUser.lastName || null,
+        username: dbUser.username || null,
+        email: dbUser.email || null,
+        bio: dbUser.bio || null,
+        imageUrl: dbUser.imageUrl || null,
       },
       security: {
         twoFactorEnabled: false, // Default values - would be stored in separate table

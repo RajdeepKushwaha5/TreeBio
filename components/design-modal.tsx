@@ -502,7 +502,7 @@ export function DesignModal({ children, userData: initialUserData }: DesignModal
 
                     <div className="max-w-4xl mx-auto">
                       <ShareProfile
-                        username={userData.username || "your-username"}
+                        username={(userData as any).username || "your-username"}
                         userData={{
                           name: userData.name || "Your Name",
                           bio: userData.bio || "",
