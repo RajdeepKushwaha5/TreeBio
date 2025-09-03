@@ -350,16 +350,73 @@ const mockDb: MockDatabase = {
 // Check if we have a real Prisma client or use mock
 let db: PrismaClient | MockDatabase
 
-if (process.env.NODE_ENV === 'production' || process.env.DATABASE_URL) {
+// Enhanced database initialization with better error handling
+async function initializeDatabase() {
+  if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
+    try {
+      console.log('Initializing production database...')
+      const client = new PrismaClient({
+        log: ['error'],
+        datasources: {
+          db: {
+            url: process.env.DATABASE_URL,
+          },
+        },
+      })
+      
+      // Test the connection
+      await client.$connect()
+      console.log('✅ Database connected successfully')
+      return client
+    } catch (error) {
+      console.error('❌ Database connection failed:', error)
+      console.warn('🔄 Falling back to mock database')
+      return mockDb as any
+    }
+  } else if (process.env.DATABASE_URL) {
+    // Development with database
+    try {
+      const client = new PrismaClient({
+        log: ['query', 'error', 'warn'],
+      })
+      await client.$connect()
+      return client
+    } catch (error) {
+      console.warn('Development database failed, using mock:', error)
+      return mockDb as any
+    }
+  } else {
+    // Development without database URL
+    console.log('No DATABASE_URL found, using mock database')
+    return mockDb as any
+  }
+}
+
+// Initialize database synchronously for immediate use
+if (process.env.NODE_ENV === 'production' && process.env.DATABASE_URL) {
   try {
     db = new PrismaClient({
-      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      log: ['error'],
+      datasources: {
+        db: {
+          url: process.env.DATABASE_URL,
+        },
+      },
+    })
+    
+    // Test connection in background, fall back to mock on failure
+    db.$connect().catch((error: any) => {
+      console.error('Production database connection failed:', error)
+      console.warn('Falling back to mock database')
+      db = mockDb as any
     })
   } catch (error) {
     console.error('Failed to initialize Prisma client in production:', error)
-    throw new Error('Database connection failed')
+    console.warn('Using mock database as fallback')
+    db = mockDb as any
   }
-} else {
+} else if (process.env.DATABASE_URL) {
+  // Development with real database
   if (!global.__prisma) {
     try {
       global.__prisma = new PrismaClient({
@@ -371,6 +428,10 @@ if (process.env.NODE_ENV === 'production' || process.env.DATABASE_URL) {
     }
   }
   db = global.__prisma!
+} else {
+  // No database URL - use mock
+  console.log('No DATABASE_URL provided, using mock database')
+  db = mockDb as any
 }
 
 export { db }

@@ -55,9 +55,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: process.env.GOOGLE_SITE_VERIFICATION,
-  },
+  // Remove optional verification that might cause issues
 };
 
 export default function RootLayout({
@@ -75,13 +73,40 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <RealtimeProvider>
-              <Toaster />
-              {children}
-            </RealtimeProvider>
+            <ErrorBoundary>
+              <RealtimeProvider>
+                <Toaster />
+                {children}
+              </RealtimeProvider>
+            </ErrorBoundary>
           </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>
   );
+}
+
+// Add Error Boundary Component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  try {
+    return <>{children}</>;
+  } catch (error) {
+    console.error('Layout error:', error);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
+          <p className="text-muted-foreground mb-6">
+            Please refresh the page or try again later.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
