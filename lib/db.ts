@@ -350,12 +350,21 @@ const mockDb: MockDatabase = {
 // Check if we have a real Prisma client or use mock
 let db: PrismaClient | MockDatabase
 
-if (process.env.NODE_ENV === 'production') {
-  db = new PrismaClient()
+if (process.env.NODE_ENV === 'production' || process.env.DATABASE_URL) {
+  try {
+    db = new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    })
+  } catch (error) {
+    console.error('Failed to initialize Prisma client in production:', error)
+    throw new Error('Database connection failed')
+  }
 } else {
   if (!global.__prisma) {
     try {
-      global.__prisma = new PrismaClient()
+      global.__prisma = new PrismaClient({
+        log: ['query', 'error', 'warn'],
+      })
     } catch (error) {
       console.warn('Failed to initialize Prisma client, using mock database')
       global.__prisma = mockDb as any

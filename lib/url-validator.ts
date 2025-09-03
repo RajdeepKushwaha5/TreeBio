@@ -26,9 +26,18 @@ export function validateUrl(url: string): { isValid: boolean; error?: string; no
     }
 
     // Check for localhost in production
+    const hostname = parsedUrl.hostname;
+    
+    // Allow localhost only in development
+    if (process.env.NODE_ENV !== 'production' && 
+        (hostname === 'localhost' || hostname.startsWith('127.') || hostname.startsWith('192.168.'))) {
+      return { isValid: true, normalizedUrl };
+    }
+    
+    // Block localhost and private IPs in production
     if (process.env.NODE_ENV === 'production' && 
-        (parsedUrl.hostname === 'localhost' || parsedUrl.hostname === '127.0.0.1')) {
-      return { isValid: false, error: 'Localhost URLs are not allowed in production' };
+        (hostname === 'localhost' || hostname.startsWith('127.') || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.'))) {
+      return { isValid: false, error: 'Private/local URLs are not allowed in production' };
     }
 
     // Check for minimum hostname length

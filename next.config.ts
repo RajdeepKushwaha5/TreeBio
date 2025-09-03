@@ -10,6 +10,33 @@ const nextConfig: NextConfig = {
     return config;
   },
   // Remove 'standalone' output for Vercel deployment
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'img.clerk.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.clerk.dev',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.gravatar.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      }
+    ],
+  },
+  experimental: {
+    // Remove serverComponentsExternalPackages as it's deprecated
+  },
 };
 
 export default nextConfig;
