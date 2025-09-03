@@ -1,10 +1,8 @@
 "use server";
 
-import { PrismaClient } from "@prisma/client";
+import { db } from "@/lib/db";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-
-const prisma = new PrismaClient();
 
 export interface ArchivedLink {
   id: string;
@@ -41,7 +39,7 @@ export async function getArchivedLinks() {
     }
 
     // Get user from database
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId }
     });
 
@@ -50,7 +48,7 @@ export async function getArchivedLinks() {
     }
 
     // Get archived links (inactive links)
-    const archivedLinks = await prisma.link.findMany({
+    const archivedLinks = await db.link.findMany({
       where: {
         userId: user.id,
         isActive: false
@@ -63,10 +61,10 @@ export async function getArchivedLinks() {
       }
     });
 
-    const totalClicks = archivedLinks.reduce((sum, link) => sum + link.clickCount, 0);
+    const totalClicks = archivedLinks.reduce((sum: number, link: any) => sum + link.clickCount, 0);
 
     return {
-      links: archivedLinks.map(link => ({
+      links: archivedLinks.map((link: any) => ({
         id: link.id,
         title: link.title,
         url: link.url,
@@ -93,7 +91,7 @@ export async function restoreArchivedLink(linkId: string) {
       throw new Error("Unauthorized");
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId }
     });
 
@@ -101,7 +99,7 @@ export async function restoreArchivedLink(linkId: string) {
       throw new Error("User not found");
     }
 
-    await prisma.link.update({
+    await db.link.update({
       where: {
         id: linkId,
         userId: user.id
@@ -128,7 +126,7 @@ export async function deleteArchivedLink(linkId: string) {
       throw new Error("Unauthorized");
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId }
     });
 
@@ -137,12 +135,12 @@ export async function deleteArchivedLink(linkId: string) {
     }
 
     // Delete analytics first (cascade should handle this, but being explicit)
-    await prisma.linkAnalytics.deleteMany({
+    await db.linkAnalytics.deleteMany({
       where: { linkId }
     });
 
     // Delete the link
-    await prisma.link.delete({
+    await db.link.delete({
       where: {
         id: linkId,
         userId: user.id
@@ -165,7 +163,7 @@ export async function archiveLink(linkId: string, reason?: string) {
       throw new Error("Unauthorized");
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId }
     });
 
@@ -173,7 +171,7 @@ export async function archiveLink(linkId: string, reason?: string) {
       throw new Error("User not found");
     }
 
-    await prisma.link.update({
+    await db.link.update({
       where: {
         id: linkId,
         userId: user.id
@@ -201,7 +199,7 @@ export async function getArchiveStats() {
       throw new Error("Unauthorized");
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await db.user.findUnique({
       where: { clerkId }
     });
 
@@ -210,13 +208,13 @@ export async function getArchiveStats() {
     }
 
     const [archivedLinksCount, archivedLinksClicks, totalLinksCount, activeLinksCount] = await Promise.all([
-      prisma.link.count({
+      db.link.count({
         where: {
           userId: user.id,
           isActive: false
         }
       }),
-      prisma.link.aggregate({
+      db.link.aggregate({
         where: {
           userId: user.id,
           isActive: false
@@ -225,12 +223,12 @@ export async function getArchiveStats() {
           clickCount: true
         }
       }),
-      prisma.link.count({
+      db.link.count({
         where: {
           userId: user.id
         }
       }),
-      prisma.link.count({
+      db.link.count({
         where: {
           userId: user.id,
           isActive: true
@@ -269,7 +267,7 @@ export async function exportArchivedData(format: 'json' | 'csv' = 'json') {
     
     if (format === 'csv') {
       const csvHeader = 'Title,URL,Archived Date,Clicks,Reason\n';
-      const csvData = links.map(link => 
+      const csvData = links.map((link: any) => 
         `"${link.title}","${link.url}","${link.archivedAt}","${link.originalClicks}","${link.reason || ''}"`
       ).join('\n');
       

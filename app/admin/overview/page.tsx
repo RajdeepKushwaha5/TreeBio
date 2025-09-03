@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { db } from '@/lib/db';
 import { AnalyticsWrapper } from '@/modules/analytics/components/analytics-wrapper';
 import { OverviewCards } from '@/modules/analytics/components/overview-card';

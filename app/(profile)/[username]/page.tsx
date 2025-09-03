@@ -1,3 +1,6 @@
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 import { logProfileVist } from '@/modules/analytics/actions';
 import { getUserByUsername } from '@/modules/profile/actions';
 import TreeBioProfile from '@/modules/profile/components/treebio-profile';

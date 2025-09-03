@@ -27,8 +27,17 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
         <body className={`${poppins.variable} antialiased`}>
-          <Toaster />
-          {children}
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <RealtimeProvider>
+              <Toaster />
+              {children}
+            </RealtimeProvider>
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

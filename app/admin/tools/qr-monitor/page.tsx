@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import QRCodeMonitor from "@/components/qr-code-monitor";
 import QRCodeValidator from "@/components/qr-code-validator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

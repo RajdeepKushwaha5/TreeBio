@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import LinkShortenerMonitor from "@/components/link-shortener-monitor";
 
 export default function LinkShortenerMonitorPage() {

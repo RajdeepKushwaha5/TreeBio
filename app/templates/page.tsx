@@ -4,6 +4,9 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Palette } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Sample user data for template showcase
 const sampleUserData = {
   name: "Alex Johnson",

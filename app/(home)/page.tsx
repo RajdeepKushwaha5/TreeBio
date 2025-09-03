@@ -3,6 +3,8 @@ import { onBoardUser } from "@/modules/auth/actions";
 import ClaimLinkForm from "@/modules/home/components/claim-link-form";
 import { getCurrentUsername } from "@/modules/profile/actions";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 import Link from "next/link";
 import { redirect } from "next/navigation";

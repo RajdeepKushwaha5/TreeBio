@@ -202,6 +202,7 @@ interface MockDatabase {
     }[]>;
     count: (args?: unknown) => Promise<number>;
     groupBy: (args: unknown) => Promise<unknown[]>;
+    deleteMany: (args?: unknown) => Promise<{ count: number }>;
   };
   $transaction: <T>(fn: (tx: MockDatabase) => Promise<T>) => Promise<T>;
 }
@@ -338,7 +339,8 @@ const mockDb: MockDatabase = {
     }),
     findMany: async () => [],
     count: async () => 0,
-    groupBy: async () => []
+    groupBy: async () => [],
+    deleteMany: async () => ({ count: 0 })
   },
   $transaction: async <T>(fn: (tx: MockDatabase) => Promise<T>) => {
     return fn(mockDb);
