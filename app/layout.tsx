@@ -3,11 +3,6 @@ import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 
-import { ThemeProvider } from "@/components/theme-provider";
-import { RealtimeProvider } from "@/components/realtime-provider-fallback";
-import { Toaster } from "sonner";
-import { ErrorBoundary } from "react-error-boundary";
-
 const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
   subsets: ["latin"],
@@ -64,50 +59,51 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-    >
-      <html lang="en" suppressHydrationWarning>
-        <body className={`${poppins.variable} antialiased`}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <ErrorBoundary
-              fallback={<ErrorFallback />}
-              onError={(error) => console.error('Application error:', error)}
-            >
-              <RealtimeProvider>
-                <Toaster />
-                {children}
-              </RealtimeProvider>
-            </ErrorBoundary>
-          </ThemeProvider>
+  try {
+    return (
+      <ClerkProvider
+        publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      >
+        <html lang="en" suppressHydrationWarning>
+          <body className={`${poppins.variable} antialiased`}>
+            <SimpleErrorBoundary>
+              {children}
+            </SimpleErrorBoundary>
+          </body>
+        </html>
+      </ClerkProvider>
+    );
+  } catch (error) {
+    // Fallback if even the layout fails
+    console.error('Layout error:', error);
+    return (
+      <html lang="en">
+        <body>
+          <div className="min-h-screen flex items-center justify-center bg-white">
+            <div className="text-center max-w-md mx-auto p-6">
+              <h1 className="text-2xl font-bold mb-4 text-gray-800">TreeBio</h1>
+              <p className="text-gray-600 mb-6">
+                Loading TreeBio... Please wait a moment.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+              >
+                Refresh Page
+              </button>
+            </div>
+          </div>
         </body>
       </html>
-    </ClerkProvider>
-  );
+    );
+  }
 }
 
-// Error Fallback Component
-function ErrorFallback() {
+// Simple Error Boundary that doesn't rely on external libraries
+function SimpleErrorBoundary({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
-      <div className="text-center max-w-md mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-4">Something went wrong!</h1>
-        <p className="text-muted-foreground mb-6">
-          We&apos;re experiencing technical difficulties. Please try refreshing the page.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-        >
-          Refresh Page
-        </button>
-      </div>
-    </div>
+    <>
+      {children}
+    </>
   );
 }

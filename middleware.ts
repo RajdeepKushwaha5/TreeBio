@@ -2,9 +2,11 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
 // Add your username routes to public routes
 const isPublicRoute = createRouteMatcher([
+  '/',           // Make root route public
   '/sign-in(.*)', 
   '/sign-up(.*)',
-  '/([^/]+)' // This matches any single segment path like /username
+  '/health',     // Make health check public
+  '/([^/]+)'     // This matches any single segment path like /username
 ])
 
 export default clerkMiddleware(async (auth, req) => {
