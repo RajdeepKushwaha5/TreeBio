@@ -3,9 +3,6 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import ClaimLinkForm from "@/modules/home/components/claim-link-form";
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
-
 // Loading component
 function Loading() {
   return (
