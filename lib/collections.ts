@@ -103,7 +103,12 @@ export const collectionsService = {
           id: { in: params.linkIds },
           userId: user.id,
         },
-      });
+      }) as Array<{
+        id: string;
+        title: string;
+        url: string;
+        clickCount: number;
+      }>;
 
       if (userLinks.length !== params.linkIds.length) {
         throw new Error('Some links do not belong to you');
@@ -121,7 +126,7 @@ export const collectionsService = {
         userId: user.id,
         createdAt: new Date(),
         updatedAt: new Date(),
-        links: userLinks.map((link: any, index: number) => ({
+        links: userLinks.map((link: { id: string; title: string; url: string; clickCount: number }, index: number) => ({
           id: link.id,
           title: link.title,
           url: link.url,
